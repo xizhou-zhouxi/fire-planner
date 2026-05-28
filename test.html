@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.js"></script>
+</head>
+<body>
+  <div id="root">Loading...</div>
+  <script>
+    // Test that all CDN libs loaded
+    document.getElementById('root').innerHTML = 
+      'React: ' + (typeof React) + 
+      ' | ReactDOM: ' + (typeof ReactDOM) + 
+      ' | Recharts: ' + (typeof Recharts);
+  </script>
+</body>
+</html>
