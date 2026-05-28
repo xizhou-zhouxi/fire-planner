@@ -1,1 +1,2 @@
-# fire-planner
+# FIREpath
+Your FIRE planning app.
