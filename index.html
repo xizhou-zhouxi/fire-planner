@@ -23,7 +23,17 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.js"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <script>
+  // Recharts fallback shim — if CDN fails, provide safe no-op components
+  if (typeof Recharts === 'undefined') {
+    window.Recharts = {};
+    ['AreaChart','Area','LineChart','Line','XAxis','YAxis','CartesianGrid',
+     'Tooltip','ResponsiveContainer','ReferenceLine','PieChart','Pie','Cell'].forEach(function(name) {
+      window.Recharts[name] = function() { return null; };
+    });
+  }
+  </script>
 </head>
 <body>
   <div id="root"></div>
