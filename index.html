@@ -954,13 +954,7 @@ function Onboarding({
       outline: 'none'
     },
     autoFocus: true
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: INK,
-      marginTop: 6
-    }
-  }, "We never share or store this data \u2014 it stays on your device.")), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 20
     }
@@ -1295,9 +1289,15 @@ function Onboarding({
       }
     }, "$", save.toLocaleString(), "/mo")), /*#__PURE__*/React.createElement("div", {
       style: {
+        fontSize: 11,
+        color: INK30,
+        marginBottom: 6
+      }
+    }, "\uD83D\uDD12 We never share or store this data \u2014 it stays on your device."), /*#__PURE__*/React.createElement("div", {
+      style: {
         height: 1,
         background: BORDER,
-        margin: '16px -20px 22px'
+        margin: '8px -20px 16px'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2859,7 +2859,13 @@ function HomeScreen({
         fontWeight: 600
       }
     }, "$", (s.max / 1000).toFixed(0), "K")));
-  })) : /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: INK30,
+      marginTop: 4
+    }
+  }, "\uD83D\uDD12 We never share or store this data \u2014 it stays on your device.")) : /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -5342,7 +5348,7 @@ Rules:
         role: "user",
         content: prompt + "\n\nTransaction data:\n" + text
       }];
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -6204,6 +6210,12 @@ function SpendingScreen({
       fontWeight: 500
     }
   }, "Monthly spending"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: INK30,
+      marginBottom: 10
+    }
+  }, "\uD83D\uDD12 We never share or store this data \u2014 it stays on your device."), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       marginBottom: 12
@@ -7166,7 +7178,7 @@ function ProfileScreen({
       fontSize: 13,
       color: INK,
       fontWeight: 600,
-      marginBottom: 18,
+      marginBottom: 10,
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
@@ -7177,6 +7189,12 @@ function ProfileScreen({
       fontSize: 16
     }
   }, "$", nw.toLocaleString())), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: INK30,
+      marginBottom: 10
+    }
+  }, "\uD83D\uDD12 We never share or store this data \u2014 it stays on your device."), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 1,
       background: BORDER,
@@ -7511,6 +7529,7 @@ function App() {
   }))));
 }
 window.App = App;
+
 
   </script>
   <script>
