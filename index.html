@@ -637,13 +637,10 @@ function BNav({
     }), /*#__PURE__*/React.createElement("polyline", {
       points: "9 22 9 12 15 12 15 22"
     }))
-  }, {
-    id: 'projections',
-    label: 'Future',
-    icon: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
-      points: "22 12 18 12 15 21 9 3 6 12 2 12"
-    }))
-  }, {
+  },
+  // Future tab hidden for Day 1 launch — uncomment to re-enable:
+  // {id:'projections',label:'Future',icon:<><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>},
+  {
     id: 'spending',
     label: 'Spending',
     icon: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
@@ -7486,10 +7483,6 @@ function App() {
     tweaks: tweaks,
     milestoneReached: milestoneReached,
     setMilestoneReached: setMilestoneReached
-  }), tab === 'projections' && /*#__PURE__*/React.createElement(ProjectionsScreen, {
-    fin: fin,
-    res: res,
-    tweaks: tweaks
   }), tab === 'spending' && /*#__PURE__*/React.createElement(SpendingScreen, {
     fin: fin,
     setFin: setFin,
