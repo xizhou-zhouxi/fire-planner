@@ -5886,21 +5886,23 @@ Rules:
 function SpendingScreen({
   fin,
   setFin,
-  res
+  res,
+  customTxns,
+  setCustomTxns,
+  importCategories,
+  setImportCategories
 }) {
   const [period, setPeriod] = useState('1m');
   const [openCat, setOpenCat] = useState(null);
   const [view, setView] = useState('overview');
   const [drillCat, setDrillCat] = useState(null);
   const [showImport, setShowImport] = useState(false);
-  const [importMode, setImportMode] = useState('upload'); // 'upload' | 'manual'
+  const [importMode, setImportMode] = useState('upload');
   const [importText, setImportText] = useState('');
-  const [importImage, setImportImage] = useState(null); // {base64, mediaType}
+  const [importImage, setImportImage] = useState(null);
   const [importLoading, setImportLoading] = useState(false);
-  const [importResult, setImportResult] = useState(null); // parsed transactions
+  const [importResult, setImportResult] = useState(null);
   const [importError, setImportError] = useState('');
-  const [customTxns, setCustomTxns] = useState([]); // user-imported transactions
-  const [importCategories, setImportCategories] = useState({}); // category totals from AI
 
   // Empty state: no expenses set and no imported transactions
   const hasSpendingData = fin.expenses > 0 || customTxns.length > 0 || Object.keys(importCategories).length > 0;
@@ -7620,6 +7622,13 @@ function App() {
       return {};
     }
   })();
+  const savedSpending = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('fireapp_spending') || '{}');
+    } catch (e) {
+      return {};
+    }
+  })();
   const [stage, setStage] = useState(saved.stage || 'onboarding');
   const [tab, setTab] = useState('home');
   const [fin, setFin] = useState(saved.fin || {
@@ -7633,6 +7642,8 @@ function App() {
   const [tweaks, setTweaks] = useState(saved.tweaks || TWEAK_DEFAULTS);
   const [targetTier, setTargetTier] = useState(saved.targetTier || 'standard');
   const [milestoneReached, setMilestoneReached] = useState(null);
+  const [customTxns, setCustomTxns] = useState(savedSpending.customTxns || []);
+  const [importCategories, setImportCategories] = useState(savedSpending.importCategories || {});
   const [showFeedback, setShowFeedback] = useState(false);
 
   // Save to localStorage on every state change
@@ -7645,7 +7656,13 @@ function App() {
         targetTier
       }));
     } catch (e) {}
-  }, [stage, fin, tweaks, targetTier]);
+    try {
+      localStorage.setItem('fireapp_spending', JSON.stringify({
+        customTxns,
+        importCategories
+      }));
+    } catch (e) {}
+  }, [stage, fin, tweaks, targetTier, customTxns, importCategories]);
   const res = useMemo(() => fireMath(fin.income, fin.expenses, fin.assets, fin.liabilities, tweaks.returnRate / 100, tweaks.safeWithdrawal / 100, tweaks.inflation / 100), [fin, tweaks]);
   const onDone = f => {
     const finWithBaseline = {
@@ -7802,7 +7819,11 @@ function App() {
   }), tab === 'spending' && /*#__PURE__*/React.createElement(SpendingScreen, {
     fin: fin,
     setFin: setFin,
-    res: res
+    res: res,
+    customTxns: customTxns,
+    setCustomTxns: setCustomTxns,
+    importCategories: importCategories,
+    setImportCategories: setImportCategories
   }), tab === 'profile' && /*#__PURE__*/React.createElement(ProfileScreen, {
     fin: fin,
     setFin: setFin,
