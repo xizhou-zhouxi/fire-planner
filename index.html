@@ -7059,13 +7059,25 @@ function ProfileScreen({
   fin,
   setFin,
   tweaks,
-  setTweaks
+  setTweaks,
+  onboardingExpenses
 }) {
   const [draft, setDraft] = useState({
     ...fin,
     age: fin.age || 30
   });
   const [saved, setSaved] = useState(false);
+  const [showRefresh, setShowRefresh] = useState(false);
+
+  // Check if current expenses differ from onboarding baseline
+  const spendingDiff = fin.expenses !== (onboardingExpenses || fin.expenses);
+  useEffect(() => {
+    // Show refresh banner if spending data was updated (e.g. via AI import) 
+    // and differs from what's in profile by more than $50
+    if (Math.abs(fin.expenses - draft.expenses) > 50 && fin.expenses !== draft.expenses) {
+      setShowRefresh(true);
+    }
+  }, [fin.expenses]);
   const nw = (draft.assets || 0) - (draft.liabilities || 0);
   const retireAge = (draft.age || 30) + Math.round(fireMath(draft.income, draft.expenses, draft.assets, draft.liabilities, tweaks.returnRate / 100, tweaks.safeWithdrawal / 100, tweaks.inflation / 100).yrs);
   const onSave = () => {
@@ -7348,15 +7360,132 @@ function ProfileScreen({
       income: v
     })),
     prefix: "$"
-  }), /*#__PURE__*/React.createElement(Field, {
-    label: "Monthly expenses",
-    value: draft.expenses,
-    onChange: v => setDraft(d => ({
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 18
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      color: INK
+    }
+  }, "Monthly expenses"), onboardingExpenses && onboardingExpenses !== draft.expenses && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK30
+    }
+  }, "Onboarding: ", /*#__PURE__*/React.createElement("strong", null, "$", onboardingExpenses.toLocaleString()))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: 'absolute',
+      left: 14,
+      fontSize: 15,
+      fontWeight: 600,
+      color: INK,
+      pointerEvents: 'none'
+    }
+  }, "$"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: draft.expenses || '',
+    min: 0,
+    max: 100000,
+    onChange: e => setDraft(d => ({
       ...d,
-      expenses: v
+      expenses: +e.target.value || 0
     })),
-    prefix: "$"
-  }), /*#__PURE__*/React.createElement(Field, {
+    style: {
+      width: '100%',
+      padding: '12px 14px 12px 28px',
+      borderRadius: 14,
+      border: `1.5px solid ${BORDER}`,
+      fontFamily: SANS,
+      fontSize: 15,
+      fontWeight: 600,
+      color: DARK,
+      background: '#fafafa',
+      outline: 'none',
+      boxSizing: 'border-box'
+    }
+  })), showRefresh && fin.expenses !== draft.expenses && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 8,
+      padding: '10px 14px',
+      background: '#fef9f0',
+      border: '1px solid #f5e6c8',
+      borderRadius: 12,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: DARK,
+      marginBottom: 1
+    }
+  }, "Spending data updated"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: INK
+    }
+  }, "Your imported spending shows ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: CORAL
+    }
+  }, "$", fin.expenses.toLocaleString(), "/mo"), ". Update?")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6,
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setDraft(d => ({
+        ...d,
+        expenses: fin.expenses
+      }));
+      setShowRefresh(false);
+    },
+    style: {
+      padding: '6px 12px',
+      borderRadius: 100,
+      border: 'none',
+      background: CORAL,
+      color: 'white',
+      fontFamily: SANS,
+      fontSize: 11,
+      fontWeight: 700,
+      cursor: 'pointer'
+    }
+  }, "Yes"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowRefresh(false),
+    style: {
+      padding: '6px 12px',
+      borderRadius: 100,
+      border: `1px solid ${BORDER}`,
+      background: 'white',
+      color: INK,
+      fontFamily: SANS,
+      fontSize: 11,
+      fontWeight: 600,
+      cursor: 'pointer'
+    }
+  }, "No")))), /*#__PURE__*/React.createElement(Field, {
     label: "Total assets",
     value: draft.assets,
     onChange: v => setDraft(d => ({
@@ -7519,7 +7648,11 @@ function App() {
   }, [stage, fin, tweaks, targetTier]);
   const res = useMemo(() => fireMath(fin.income, fin.expenses, fin.assets, fin.liabilities, tweaks.returnRate / 100, tweaks.safeWithdrawal / 100, tweaks.inflation / 100), [fin, tweaks]);
   const onDone = f => {
-    setFin(f);
+    const finWithBaseline = {
+      ...f,
+      onboardingExpenses: f.expenses
+    };
+    setFin(finWithBaseline);
     setTweaks(t => ({
       ...t,
       household: f.household || 'individual'
@@ -7674,7 +7807,8 @@ function App() {
     fin: fin,
     setFin: setFin,
     tweaks: tweaks,
-    setTweaks: setTweaks
+    setTweaks: setTweaks,
+    onboardingExpenses: fin.onboardingExpenses || fin.expenses
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
