@@ -7,7 +7,7 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 <style>*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%}body{background:#2c1a0e;display:flex;align-items:center;justify-content:center}input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}input[type=number]{-moz-appearance:textfield}::-webkit-scrollbar{display:none}</style>
-</head><body><div id="root" style="width:100%;height:100%"></div>
+<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script></head><body><div id="root" style="width:100%;height:100%"></div>
 <script>// import { useState, useMemo, useEffect, useRef } from "react";
 // import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 /* ─── DESIGN TOKENS ─── */const BG="#fdf5ee";const CARD="#ffffff";const DARK="#2c1a0e";const CORAL="#e8815a";const SAGE="#8eba96";const INK="#7a6255";const INK30="#c4b0a4";const BORDER="#ede4dc";const SERIF="'Fraunces', Georgia, serif";const SANS="'Nunito', system-ui, sans-serif";/* ─── INJECT FONTS ─── */const injectFonts=()=>{if(document.getElementById("fire-fonts"))return;const l=document.createElement("link");l.id="fire-fonts";l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Nunito:wght@400;500;600;700;800&display=swap";document.head.appendChild(l);};/* ─── UTILS ─── */const $k=(n,d=1)=>n>=1e6?`$${(n/1e6).toFixed(1)}M`:n>=1e3?`$${(n/1e3).toFixed(d)}K`:`$${Math.round(n).toLocaleString()}`;const pct=n=>`${Math.round(Math.max(0,n))}%`;const fmt$=n=>`$${Math.round(Math.abs(n)).toLocaleString()}`;/* ─── FIRE MATH ─────────────────────────────────────────────────────────────
@@ -121,4 +121,273 @@ const isDesktop=typeof window!=='undefined'&&window.innerWidth>=600;const frameS
 window.AuthGate = AuthGate;
 </script>
 <script>const {useState,useMemo,useEffect,useRef}=React;const {AreaChart,Area,LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,ReferenceLine}=(window.Recharts||{});ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(window.AuthGate));</script>
+<script>
+/* ─── FIREpath Preview / Figma Capture Driver ───────────────────
+   Activated by ?preview=1 in the URL. Mocks Supabase and drives
+   the app to any screen/state via additional URL params.
+   Safe in production — does nothing without ?preview=1.
+──────────────────────────────────────────────────────────────── */
+(function () {
+  var params = new URLSearchParams(location.search);
+  if (!params.get('preview')) return;
+
+  var stage       = params.get('stage')       || 'main';       // onboarding | main
+  var step        = parseInt(params.get('step')  || '0');       // 0-3 for onboarding
+  var tab         = params.get('tab')         || 'home';        // home | spending | profile
+  var modal       = params.get('modal')       || '';            // tierPicker | import | saveModal | celebration
+  var importSt    = params.get('importState') || 'upload';      // upload | analyzing | results
+  var view        = params.get('view')        || '';            // category
+  var scroll      = parseInt(params.get('scroll') || '0');
+  var noData      = params.get('data') === '0';
+  var nodismiss   = params.get('nodismiss') === '1';            // keep milestones undismissed
+
+  /* ── Mock data ──────────────────────────────────────────────── */
+  var mockFin = {
+    income: 9500, expenses: 4800, assets: 125000, liabilities: 28000,
+    location: 'San Francisco, CA', age: 32,
+    onboardingExpenses: 4800,
+    incomeSources: [
+      { id: '1', name: 'Software Engineer', amount: 8000, type: 'salary' },
+      { id: '2', name: 'Freelance consulting', amount: 1500, type: 'freelance' }
+    ]
+  };
+
+  // Dismiss all crossed milestones by default so the celebration overlay
+  // doesn't auto-appear on every home-tab capture. Pass ?nodismiss=1 to
+  // let the celebration fire naturally.
+  var dismissed = nodismiss ? [] : ['10k', '25k', '50k'];
+
+  var mockProfile = {
+    stage: stage === 'onboarding' ? 'onboarding' : 'main',
+    fin: mockFin,
+    tweaks: { returnRate: 7, safeWithdrawal: 4, inflation: 3, showMascot: true, household: 'individual' },
+    target_tier: 'standard',
+    dismissed_milestones: dismissed,
+    spending_goals: [
+      { id: 'g1', category: 'Food', limit: 800, icon: '🍕' },
+      { id: 'g2', category: 'Shopping', limit: 400, icon: '🛍️' }
+    ]
+  };
+
+  var mockTxns = noData ? [] : [
+    { date: 'Jun 15', merchant: 'Whole Foods',    description: 'Groceries',  amount: 89.50,  category: 'Food',          imported: true },
+    { date: 'Jun 14', merchant: 'Netflix',        description: 'Monthly',    amount: 15.99,  category: 'Subscriptions', imported: true },
+    { date: 'Jun 13', merchant: 'Lyft',           description: 'Ride',       amount: 24.50,  category: 'Transport',     imported: true },
+    { date: 'Jun 12', merchant: 'Starbucks',      description: 'Coffee',     amount: 8.75,   category: 'Food',          imported: true },
+    { date: 'Jun 11', merchant: 'Amazon',         description: 'Shopping',   amount: 156.80, category: 'Shopping',      imported: true },
+    { date: 'Jun 10', merchant: 'PG&E',           description: 'Utilities',  amount: 124.00, category: 'Housing',       imported: true },
+    { date: 'Jun 09', merchant: 'Spotify',        description: 'Monthly',    amount: 9.99,   category: 'Subscriptions', imported: true },
+    { date: 'Jun 08', merchant: 'Safeway',        description: 'Groceries',  amount: 67.30,  category: 'Food',          imported: true },
+    { date: 'Jun 07', merchant: 'Planet Fitness', description: 'Gym',        amount: 25.00,  category: 'Health',        imported: true },
+    { date: 'Jun 06', merchant: 'Target',         description: 'Household',  amount: 89.45,  category: 'Shopping',      imported: true },
+    { date: 'Jun 05', merchant: 'Uber',           description: 'Ride',       amount: 18.20,  category: 'Transport',     imported: true },
+    { date: 'Jun 04', merchant: 'Chipotle',       description: 'Lunch',      amount: 14.75,  category: 'Food',          imported: true },
+    { date: 'Jun 03', merchant: 'CVS',            description: 'Pharmacy',   amount: 32.50,  category: 'Health',        imported: true }
+  ];
+
+  var mockResult = {
+    transactions: [
+      { merchant: 'Whole Foods',    amount: 89.50,  category: 'Food',          date: 'Jun 15' },
+      { merchant: 'Netflix',        amount: 15.99,  category: 'Subscriptions', date: 'Jun 14' },
+      { merchant: 'Lyft',           amount: 24.50,  category: 'Transport',     date: 'Jun 13' },
+      { merchant: 'Amazon',         amount: 156.80, category: 'Shopping',      date: 'Jun 11' },
+      { merchant: 'PG&E',           amount: 124.00, category: 'Housing',       date: 'Jun 10' }
+    ],
+    summary: {
+      total_monthly: 4800,
+      categories: { Food: 1200, Housing: 1500, Shopping: 600, Transport: 300,
+                    Subscriptions: 200, Health: 200, Entertainment: 150, Other: 650 }
+    },
+    insights: 'Your top categories are Housing (31%), Food (25%), and Shopping (13%). Cutting dining out by $200/mo shaves 1.2 years off your FIRE date.'
+  };
+
+  /* ── Session ───────────────────────────────────────────────── */
+  localStorage.setItem('fireapp_session', JSON.stringify({
+    access_token: 'preview-token-figma-capture',
+    user: { id: 'preview-user-001', email: 'demo@firepath.app' }
+  }));
+
+  /* ── Fetch intercept ───────────────────────────────────────── */
+  var _fetch = window.fetch;
+  window.fetch = async function (url, opts) {
+    var u = String(url);
+    var method = (opts && opts.method) || 'GET';
+
+    if (u.includes('/auth/v1/user')) {
+      return new Response(
+        JSON.stringify({ id: 'preview-user-001', email: 'demo@firepath.app', user_metadata: {} }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (u.includes('/rest/v1/profiles')) {
+      if (method === 'PATCH' || method === 'DELETE')
+        return new Response('', { status: 204 });
+      return new Response(
+        JSON.stringify([mockProfile]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (u.includes('/rest/v1/transactions')) {
+      if (method === 'DELETE' || method === 'POST')
+        return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify(mockTxns),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (u.includes('/api/analyze-spending')) {
+      if (importSt === 'analyzing') {
+        // Never resolves during capture window → loading spinner stays visible
+        return new Promise(function () {});
+      }
+      // 'results' — return immediately
+      return new Response(
+        JSON.stringify(mockResult),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    return _fetch.apply(window, arguments);
+  };
+
+  /* ── Helpers ───────────────────────────────────────────────── */
+  function btn(pred) {
+    return Array.from(document.querySelectorAll('button')).find(pred);
+  }
+  function click(pred, delay) {
+    setTimeout(function () { var b = btn(pred); if (b) b.click(); }, delay);
+  }
+  function setNativeValue(el, value) {
+    var nativeSetter = Object.getOwnPropertyDescriptor(el.tagName === 'TEXTAREA'
+      ? window.HTMLTextAreaElement.prototype
+      : window.HTMLInputElement.prototype, 'value').set;
+    nativeSetter.call(el, value);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  /* ── React fiber utils ─────────────────────────────────────── */
+  function getFiber(el) {
+    var key = Object.keys(el).find(function (k) {
+      return k.startsWith('__reactFiber') || k.startsWith('__reactInternals');
+    });
+    return el[key];
+  }
+  function visitFibers(fiber, cb) {
+    if (!fiber) return;
+    cb(fiber);
+    visitFibers(fiber.child, cb);
+    visitFibers(fiber.sibling, cb);
+  }
+
+  /* Trigger the celebration overlay via React fiber.
+     Finds a hook whose current value is null followed by a hook
+     whose value is an Array (dismissed milestones list). */
+  function triggerCelebration() {
+    var root = document.getElementById('root');
+    if (!root) return;
+    visitFibers(getFiber(root), function (f) {
+      var hook = f && f.memoizedState;
+      while (hook) {
+        if (hook.memoizedState === null && hook.next && Array.isArray(hook.next.memoizedState)) {
+          hook.queue.dispatch({ id: '50k', label: 'Halfway to 6-fig', icon: '🎯',
+            msg: "$50K net worth! You're halfway to six figures — the acceleration is real now.", amount: 50000 });
+          return;
+        }
+        hook = hook.next;
+      }
+    });
+  }
+
+  /* ── Navigate to requested state after React renders ──────── */
+  function navigate() {
+
+    /* Onboarding: click through steps */
+    if (stage === 'onboarding') {
+      if (step >= 1) click(function (b) { return b.textContent.includes('start →'); }, 200);
+      if (step >= 2) click(function (b) {
+        return b.textContent.includes('next step') || b.textContent.includes('Skip for now');
+      }, 800);
+      if (step >= 3) click(function (b) {
+        return b.textContent.includes('FIRE number');
+      }, 1400);
+      return;
+    }
+
+    /* Tab */
+    var tabDelay = 300;
+    if (tab === 'spending') click(function (b) { return b.textContent.trim() === 'Spending'; }, tabDelay);
+    if (tab === 'profile')  click(function (b) { return b.textContent.trim() === 'Profile';  }, tabDelay);
+
+    /* Modals */
+    var mDelay = (tab !== 'home') ? 800 : 400;
+
+    if (modal === 'celebration') {
+      setTimeout(triggerCelebration, mDelay);
+      return;
+    }
+
+    if (modal === 'tierPicker') {
+      click(function (b) {
+        return b.textContent.includes('Switch') || b.textContent.includes('FIRE level');
+      }, mDelay);
+      return;
+    }
+
+    if (modal === 'saveModal') {
+      setTimeout(function () {
+        var s = btn(function (b) { return /^Save$|Save changes/i.test(b.textContent.trim()); });
+        if (s) s.click();
+      }, mDelay + 200);
+      return;
+    }
+
+    if (modal === 'import') {
+      /* 1 — open import sheet */
+      click(function (b) { return b.textContent.includes('Import'); }, mDelay);
+
+      if (importSt === 'upload') return; /* default state, nothing more needed */
+
+      /* 2 — switch to text paste mode */
+      setTimeout(function () {
+        click(function (b) { return b.textContent.includes('Paste text'); }, 0);
+      }, mDelay + 700);
+
+      /* 3 — fill in dummy transaction text */
+      setTimeout(function () {
+        var ta = document.querySelector('textarea');
+        if (ta) setNativeValue(ta, 'Jun 15  Whole Foods  $89.50\nJun 14  Netflix  $15.99\nJun 13  Lyft  $24.50');
+      }, mDelay + 1100);
+
+      /* 4 — click Analyze */
+      setTimeout(function () {
+        click(function (b) { return b.textContent.includes('Analyze'); }, 0);
+        /* For 'results': mock resolves immediately → result renders.
+           For 'analyzing': mock never resolves → loading spinner stays. */
+      }, mDelay + 1500);
+
+      return;
+    }
+
+    /* Spending category drill-in */
+    if (view === 'category' && tab === 'spending') {
+      setTimeout(function () {
+        var rows = Array.from(document.querySelectorAll('[style]')).filter(function (el) {
+          return el.style.cursor === 'pointer' && el.querySelector && el.querySelector('div');
+        });
+        if (rows.length) rows[0].click();
+      }, mDelay + 400);
+    }
+
+    /* Scroll for below-fold home content */
+    if (scroll > 0) {
+      setTimeout(function () {
+        var sc = document.querySelector('[style*="overflow-y: auto"],[style*="overflowY:auto"],[style*="overflow: auto"],[style*="overflow: scroll"]')
+                 || document.documentElement;
+        sc.scrollTop += scroll;
+      }, 1200);
+    }
+  }
+
+  window.addEventListener('load', function () { setTimeout(navigate, 900); });
+})();
+</script>
 </body></html>
