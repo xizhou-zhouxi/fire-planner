@@ -131,6 +131,18 @@ window.AuthGate = AuthGate;
   var params = new URLSearchParams(location.search);
   if (!params.get('preview')) return;
 
+  /* ── Force 360px mobile viewport so isDesktop===false ──────── */
+  (function () {
+    var existing = document.querySelector('meta[name="viewport"]');
+    if (existing) existing.setAttribute('content', 'width=360, initial-scale=1');
+    else {
+      var m = document.createElement('meta');
+      m.name = 'viewport';
+      m.content = 'width=360, initial-scale=1';
+      document.head.appendChild(m);
+    }
+  })();
+
   var stage       = params.get('stage')       || 'main';       // onboarding | main
   var step        = parseInt(params.get('step')  || '0');       // 0-3 for onboarding
   var tab         = params.get('tab')         || 'home';        // home | spending | profile
@@ -309,6 +321,10 @@ window.AuthGate = AuthGate;
       if (step >= 3) click(function (b) {
         return b.textContent.includes('FIRE number');
       }, 1400);
+      /* view=tiers — open the FIRE tier breakdown overlay */
+      if (step >= 3 && view === 'tiers') click(function (b) {
+        return b.textContent.includes('FIRE level') || b.textContent.includes('all FIRE');
+      }, 2200);
       return;
     }
 
