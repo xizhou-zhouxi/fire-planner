@@ -214,39 +214,57 @@ window.AuthGate = AuthGate;
   };
 
   /* ── Session ───────────────────────────────────────────────── */
-  localStorage.setItem('fireapp_session', JSON.stringify({
-    access_token: 'preview-token-figma-capture',
-    user: { id: 'preview-user-001', email: 'demo@firepath.app' }
-  }));
+  /* If a real Supabase session exists (from user login), keep it.
+     Only inject the mock session when there is no real one. */
+  var _existing = localStorage.getItem('fireapp_session');
+  var _hasRealSession = (function () {
+    try {
+      var s = JSON.parse(_existing);
+      return s && s.access_token && s.access_token !== 'preview-token-figma-capture';
+    } catch (e) { return false; }
+  })();
+
+  if (!_hasRealSession) {
+    localStorage.setItem('fireapp_session', JSON.stringify({
+      access_token: 'preview-token-figma-capture',
+      user: { id: 'preview-user-001', email: 'demo@firepath.app' }
+    }));
+  }
 
   /* ── Fetch intercept ───────────────────────────────────────── */
+  /* With a real session: pass auth/profile/transactions through to
+     real Supabase, but keep the analyze-spending mock so import
+     loading/results states are still capturable. */
   var _fetch = window.fetch;
   window.fetch = async function (url, opts) {
     var u = String(url);
     var method = (opts && opts.method) || 'GET';
 
-    if (u.includes('/auth/v1/user')) {
-      return new Response(
-        JSON.stringify({ id: 'preview-user-001', email: 'demo@firepath.app', user_metadata: {} }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!_hasRealSession) {
+      if (u.includes('/auth/v1/user')) {
+        return new Response(
+          JSON.stringify({ id: 'preview-user-001', email: 'demo@firepath.app', user_metadata: {} }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      if (u.includes('/rest/v1/profiles')) {
+        if (method === 'PATCH' || method === 'DELETE')
+          return new Response('', { status: 204 });
+        return new Response(
+          JSON.stringify([mockProfile]),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      if (u.includes('/rest/v1/transactions')) {
+        if (method === 'DELETE' || method === 'POST')
+          return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        return new Response(
+          JSON.stringify(mockTxns),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
     }
-    if (u.includes('/rest/v1/profiles')) {
-      if (method === 'PATCH' || method === 'DELETE')
-        return new Response('', { status: 204 });
-      return new Response(
-        JSON.stringify([mockProfile]),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    if (u.includes('/rest/v1/transactions')) {
-      if (method === 'DELETE' || method === 'POST')
-        return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
-      return new Response(
-        JSON.stringify(mockTxns),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    /* Always mock analyze-spending — needed for import state captures. */
     if (u.includes('/api/analyze-spending')) {
       if (importSt === 'analyzing') {
         // Never resolves during capture window → loading spinner stays visible
